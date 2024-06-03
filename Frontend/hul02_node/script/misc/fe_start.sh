@@ -17,7 +17,8 @@ do
     sitcp_ip=192.168.11.`expr 13 + $i`
     min_window=0
 #    max_window=188
-    max_window=225
+    # max_window=225
+    max_window=600
     only_leading=1
     master=--slave
 
