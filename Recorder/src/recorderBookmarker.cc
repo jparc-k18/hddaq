@@ -69,6 +69,6 @@ Bookmarker::close()
 {
   m_bookmark.flush();
   m_bookmark.close();
-  ::chmod(m_filename.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+  ::chmod(m_filename.c_str(), S_IRUSR | S_IRGRP | S_IROTH);
   return;
 }
