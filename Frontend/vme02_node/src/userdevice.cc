@@ -13,9 +13,10 @@
 #include <iostream>
 
 #define DMA_CHAIN 1
-#define DMA_V792  1 // if DMA_CHAIN 0
+#define DMA_V792  0 // if DMA_CHAIN 0
+//#define DMA_V792  1 // if DMA_CHAIN 0
 
-#define USE_RM 0
+#define USE_RM 0 // if use GPIO-RM
 #define USE_RMME 0
 
 #define USE_V775 0
@@ -53,7 +54,7 @@ open_device( NodeProp& nodeprop )
 
   gVme.AddModule( new vme::CaenV792( 0x00110000 ) );
   gVme.AddModule( new vme::CaenV792( 0x00120000 ) );
-  gVme.AddModule( new vme::CaenV792( 0x00130000 ) );
+  //  gVme.AddModule( new vme::CaenV792( 0x00130000 ) );
   // gVme.AddModule( new vme::CaenV792( 0xad060000 ) );
   // gVme.AddModule( new vme::CaenV792( 0xad070000 ) );
 
@@ -70,13 +71,16 @@ open_device( NodeProp& nodeprop )
 
   ////////// V792
   {
-    GEF_UINT16 geo_addr[]  = { 0x2, 0x4, 0x6 };
-    GEF_UINT16 chain_set[] = { 0x2, 0x3, 0x1 };
+    //    GEF_UINT16 geo_addr[]  = { 0x2, 0x4, 0x6 };
+    GEF_UINT16 geo_addr[]  = { 0x2, 0x4};
+    //    GEF_UINT16 chain_set[] = { 0x2, 0x3, 0x1 };
+    GEF_UINT16 chain_set[] = { 0x2, 0x1};
     // GEF_UINT16 fast_clear_window = 0x3f0; // 31.5 + 7 us
     GEF_UINT16 overflow_suppression = 1; // 0:enable 1:disable
     GEF_UINT16 zero_suppression     = 1; // 0:enable 1:disable
     GEF_UINT16 all_trigger          = 0; // 0:accepted 1:all
-    GEF_UINT16 iped[] = { 255, 255, 255 }; // 0x0-0xff
+    //    GEF_UINT16 iped[] = { 255, 255, 255}; // 0x0-0xff
+    GEF_UINT16 iped[] = { 255, 255}; // 0x0-0xff
     const int n = gVme.GetNumOfModule<vme::CaenV792>();
     for( int i=0; i<n; ++i ){
       vme::CaenV792* m = gVme.GetModule<vme::CaenV792>(i);
