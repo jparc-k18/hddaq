@@ -19,7 +19,7 @@ tdc=on
 #for i in $(seq 96 102)
 #for i in $(seq 16 17) $(seq 19 31)
 #for i in $(seq 16 17) $(seq 31 34) $(seq 49 53) $(seq 69 74) $(seq 95 95)
-for i in $(seq 86 86) 
+for i in $(seq 46 48) $(seq 64 68) $(seq 86 86) 
 #for i in $(seq 16 16)
 do
   if [ $i -eq 18 ]; then continue; fi
@@ -42,7 +42,7 @@ do
 	$reg_dir \
 	$adc_off \
 	$tdc \
-#	>/dev/null 2>/dev/null &
+	>/dev/null 2>/dev/null &
   else
     $bin_dir/frontend.sh \
 	$nickname \
@@ -53,7 +53,7 @@ do
 	$reg_dir \
 	$adc \
 	$tdc \
-#	>/dev/null 2>/dev/null &
+	>/dev/null 2>/dev/null &
   fi
 
 
