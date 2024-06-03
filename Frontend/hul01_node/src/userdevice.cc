@@ -16,6 +16,10 @@
 #include "network.hh"
 #include "rbcp.hh"
 
+// -- for HBX daq --
+#include <time.h>
+
+
 #define MAKE_TEXT 0
 
 namespace
@@ -261,15 +265,28 @@ init_device( NodeProp& nodeprop )
       fModule.WriteModule(IOM::kAddrExtBusy     , IOM::kReg_i_Nimin3, 1);
       fModule.WriteModule(IOM::kAddrExtRsv2     , IOM::kReg_i_Nimin4, 1);
       //fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_RML1, 1);
-      //fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_ModuleBusy, 1);
+      fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_ModuleBusy, 1);
       //fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_RMRsv1, 1);
-      fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_CrateBusy, 1);
+      //      fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_CrateBusy, 1);
       fModule.WriteModule(IOM::kAddrNimout2     , IOM::kReg_o_RML1, 1);
       fModule.WriteModule(IOM::kAddrNimout3     , IOM::kReg_o_RMRsv1, 1);
       fModule.WriteModule(IOM::kAddrNimout4     , IOM::kReg_o_DaqGate, 1);
 
       // start DAQ
       fModule.WriteModule(DCT::kAddrDaqGate, 1, 1);
+
+      // added for HBX daq
+      {
+	bool flag =true;
+	std::time_t start_t = std::time(nullptr);
+	while(flag){
+	  std::time_t now_t = std::time(nullptr);
+	  if(now_t-start_t >= 5){
+	    flag = false;
+	  }
+	}
+      }
+
       return;
     }
   case DM_DUMMY:
@@ -298,6 +315,19 @@ finalize_device( NodeProp& nodeprop )
 
   shutdown(sock, SHUT_RDWR);
   close(sock);
+
+  // added for HBX daq
+  {
+    bool flag =true;
+    std::time_t start_t = std::time(nullptr);
+    while(flag){
+      std::time_t now_t = std::time(nullptr);
+      if(now_t-start_t >= 14){
+	flag = false;
+      }
+    }
+  }
+
 
 #if MAKE_TEXT
   std::stringstream ss;

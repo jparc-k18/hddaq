@@ -438,7 +438,7 @@ init_device( NodeProp& nodeprop )
       fModule.WriteModule(IOM::kAddrExtClr, IOM::kReg_i_Nimin3, 1);
       //fModule.WriteModule(IOM::kAddrExtBusy, IOM::kReg_i_Nimin2, 1);
       //fModule.WriteModule(IOM::kAddrNimout1,  IOM::kReg_o_ModuleBusy, 1);
-      fModule.WriteModule(IOM::kAddrNimout1,  IOM::kAddrExtL1, 1);
+      //fModule.WriteModule(IOM::kAddrNimout1,  IOM::kAddrExtL1, 1);
       fModule.WriteModule(IOM::kAddrNimout2,  IOM::kReg_o_clk10kHz, 1);
 
       // start DAQ
