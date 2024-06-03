@@ -5,7 +5,6 @@ bin_dir=$(dirname `readlink -f $0`)
 cd $bin_dir
 
 $bin_dir/message.sh > /dev/null 2> /dev/null &
-#$bin_dir/message.sh &
 
 sleep 1
 
@@ -15,24 +14,18 @@ adc=on
 adc_off=off
 tdc=on
 
+#for i in $(seq 16 55)
 #for i in $(seq 96 102)
 #for i in $(seq 16 17) $(seq 19 31)
-#for i in $(seq 16 17) $(seq 31 34) $(seq 49 53) $(seq 69 74) $(seq 95 95)
-# for i in $(seq 16 17) $(seq 31 34) $(seq 49 53) $(seq 69 69) 
-for i in $(seq 16 17) $(seq 31 34) $(seq 49 51) # 2024.03.22
-# for i in $(seq 16 16)
-
-#for i in $(seq 16 17) $(seq 31 34) $(seq 49 53) $(seq 69 69) $(seq 27 30) $(seq 44 48) $(seq 64 68) $(seq 86 86)
-# for i in $(seq 27 30) $(seq 44 48) $(seq 64 68) $(seq 86 86)
-	 
+for i in $(seq 16 17) $(seq 19 31) $(seq 96 102)
 do
   if [ $i -eq 18 ]; then continue; fi
   # if [ $i -eq 21 ]; then continue; fi
   # if [ $i -eq 27 ]; then continue; fi
 
-  nodeid=`expr 2100 + $i`
-  nickname=aft01-$i
-  dataport=`expr 9100 + $i`
+  nodeid=`expr 2000 + $i`
+  nickname=veasiroc$i
+  dataport=`expr 9100 + $i` 
   sitcp_ip=192.168.11.$i
   module_num=$i
 
@@ -59,6 +52,6 @@ do
 	$tdc \
 	>/dev/null 2>/dev/null &
   fi
-
+      
 
 done

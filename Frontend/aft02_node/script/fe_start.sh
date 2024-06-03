@@ -13,9 +13,18 @@ reg_dir=${HOME}/vme-easiroc-registers
 adc=on
 tdc=on
 
+#for i in $(seq 69 69)
 #for i in $(seq 27 30) $(seq 44 48) $(seq 64 68) $(seq 86 89)
-for i in $(seq 27 30) $(seq 44 48) $(seq 64 68) $(seq 86 86)
-#for i in 48
+#for i in $(seq 27 30) $(seq 44 48) $(seq 64 68) $(seq 86 86)
+#for i in $(seq 27 30) $(seq 44 48) $(seq 64 68) 
+# for i in $(seq 27 30) $(seq 44 48) $(seq 64 68) $(seq 86 86)
+for i in $(seq 52 53) $(seq 69 69) $(seq 27 30) $(seq 44 45) #2024.03.22
+#for i in $(seq 52 53) $(seq 69 69) $(seq 27 29) $(seq 44 45) #2024.04.21
+# for i in $(seq 27 30) $(seq 44 48) $(seq 64 68)
+# for i in $(seq 86 86)
+
+#for i in $(seq 16 17) $(seq 31 34) $(seq 49 53) $(seq 69 69) $(seq 27 30) $(seq 44 48) $(seq 64 68) $(seq 86 86)
+
 do
   if [ $i -eq 18 ]; then continue; fi
 

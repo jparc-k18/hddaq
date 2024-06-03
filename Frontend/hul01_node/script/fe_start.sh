@@ -16,8 +16,10 @@ ip=(61 62 63 60)
 #a=(1 2 5)
 #a=(1 2 5 0)
 #for i in ${a[@]}
-#for i in $(seq 0 2)
-for i in $(seq 0 3)
+for i in $(seq 0 2)
+#for i in 0 2
+#for i in $(seq 0 1)
+#for i in $(seq 0 3)
 do
     nodeid=`expr $((0x601)) + $i`
     nickname=hul01scr-`expr 1 + $i`

@@ -286,7 +286,7 @@ open_device( NodeProp& nodeprop )
       resetProbeRegister(ip);
       //  sendPedestalSupp(ip);
       //  sendSelectableLogic(ip);
-      //  sendTimeWindow(ip);
+      //  sendTimeWindow();
       break;
     }catch(RBCPError &e){
       send_error_message(e.what());
@@ -343,7 +343,6 @@ init_device( NodeProp& nodeprop )
       //      sendProbeRegister(ip);
       sendPedestalSupp(ip);
       sendSelectableLogic(ip);
-      //  sendTimeWindow(ip);
 
       while(0 > (sock = ConnectSocket(ip) )){
 	std::ostringstream oss;
@@ -370,7 +369,6 @@ init_device( NodeProp& nodeprop )
       sendProbeRegister(ip);
       sendPedestalSupp(ip);
       sendSelectableLogic(ip);
-      //  sendTimeWindow(ip);
 
       return;
     }

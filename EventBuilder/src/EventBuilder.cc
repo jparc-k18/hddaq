@@ -96,7 +96,7 @@ typedef Node_map::value_type node_inf;
 typedef std::vector<NodeInfo> Node_info;
 Node_info node_info;
 
-const int k_quelen = 200;
+const int k_quelen = 2000;
 
 int get_node_inf(const char* filename, Node_map* node_map)
 {
