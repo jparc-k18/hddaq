@@ -16,8 +16,8 @@ sleep 1
 en_slot=(0x0, 0x1, 0x3, 0x1, 0x3)
 
 #start hulhrtdc
-for i in $(seq 1 4)
-#for i in $(seq 1 3)
+#for i in $(seq 1 4)
+for i in $(seq 1 3)
 #for i in $(seq 2 2)
 #for i in $(seq 2 3)
 do
