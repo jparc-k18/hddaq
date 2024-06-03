@@ -1,0 +1,6 @@
+#Definition of word 0
+StartDefinition
+bit0	bit1	bit2	bit3	bit4	bit5	bit6	bit7
+EndDefinition
+#none	Raz_Ch	Val_Evt	none	en_link	none	test_r	test_sc
+0	0	1	0	1	0	0	0
