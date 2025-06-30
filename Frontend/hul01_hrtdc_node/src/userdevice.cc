@@ -31,6 +31,7 @@ namespace
   char ip[100];
   unsigned int min_time_window;
   unsigned int max_time_window;
+  unsigned int enable_block = 0x0;  
   int          en_slot = 0x3;
   bool         en_slot_up   = false;
   bool         en_slot_down = false;
@@ -304,6 +305,17 @@ open_device( NodeProp& nodeprop )
       if( en_slot      & 0x1 ) en_slot_up   = true;
       if( (en_slot>>1) & 0x1 ) en_slot_down = true;
     }
+    
+    if( arg.substr(0,15) == "--only-leading=" ){
+      iss.str( arg.substr(15) );
+      int flag;
+      iss >> flag;
+      if( flag ){
+	enable_block = HRTDC_MZN::DCT::kEnLeading;
+      } else {
+	enable_block = HRTDC_MZN::DCT::kEnLeading | HRTDC_MZN::DCT::kEnTrailing;
+      }
+    }
   }
 
   //Connection check -----------------------------------------------
@@ -419,15 +431,17 @@ init_device( NodeProp& nodeprop )
 
       fModule.WriteModule(DCT::kAddrResetEvb, 0x1, 1);
 
-      uint32_t en_blocks = HRTDC_MZN::DCT::kEnLeading;
+      // uint32_t en_blocks = HRTDC_MZN::DCT::kEnLeading;
       if(en_slot_up){
 	WriteModuleIn2ndryFPGA(fModule, BBP::kUpper,
-		       HRTDC_MZN::DCT::kAddrEnBlocks, en_blocks, 1);
+			       //    HRTDC_MZN::DCT::kAddrEnBlocks, en_blocks, 1);
+			       HRTDC_MZN::DCT::kAddrEnBlocks, enable_block, 1);
       }
 
       if(en_slot_down ){
 	WriteModuleIn2ndryFPGA(fModule, BBP::kLower,
-		       HRTDC_MZN::DCT::kAddrEnBlocks, en_blocks, 1);
+			       //    HRTDC_MZN::DCT::kAddrEnBlocks, en_blocks, 1);
+			       HRTDC_MZN::DCT::kAddrEnBlocks, enable_block, 1);
       }
 
       if(en_slot_up)   SetTdcWindow(max_time_window, min_time_window, fModule, BBP::kUpper);

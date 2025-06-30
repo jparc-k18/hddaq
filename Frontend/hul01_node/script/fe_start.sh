@@ -17,6 +17,7 @@ ip=(61 62 63 60)
 #a=(1 2 5 0)
 #for i in ${a[@]}
 for i in $(seq 0 2)
+# for i in $(seq 0 0)
 #for i in 0 2
 #for i in $(seq 0 1)
 #for i in $(seq 0 3)

@@ -27,6 +27,10 @@ do
     sitcp_ip=192.168.10.`expr 65 + $i`
     min_window=10
     max_window=100
+    only_leading=1
+    if [ $i -eq 2 ]; then
+	only_leading=0
+    fi
 
     $bin_dir/frontend_hrtdc.sh \
 	$nickname \
@@ -35,6 +39,7 @@ do
 	$sitcp_ip \
 	$min_window \
 	$max_window \
+	$only_leading \
 	${en_slot[$i]} \
 	>/dev/null 2>/dev/null &
 
