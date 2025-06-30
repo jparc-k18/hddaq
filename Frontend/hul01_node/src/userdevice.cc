@@ -267,7 +267,7 @@ init_device( NodeProp& nodeprop )
       //fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_RML1, 1);
       fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_ModuleBusy, 1);
       //fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_RMRsv1, 1);
-      //      fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_CrateBusy, 1);
+      // fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_CrateBusy, 1);
       fModule.WriteModule(IOM::kAddrNimout2     , IOM::kReg_o_RML1, 1);
       fModule.WriteModule(IOM::kAddrNimout3     , IOM::kReg_o_RMRsv1, 1);
       fModule.WriteModule(IOM::kAddrNimout4     , IOM::kReg_o_DaqGate, 1);

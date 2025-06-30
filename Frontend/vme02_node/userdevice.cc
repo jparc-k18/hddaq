@@ -12,8 +12,8 @@
 #include <sys/time.h>
 #include <iostream>
 
-#define DMA_CHAIN 0
-#define DMA_V792  1 // if DMA_CHAIN 0
+#define DMA_CHAIN 1
+#define DMA_V792  0 // if DMA_CHAIN 0
 
 namespace
 {

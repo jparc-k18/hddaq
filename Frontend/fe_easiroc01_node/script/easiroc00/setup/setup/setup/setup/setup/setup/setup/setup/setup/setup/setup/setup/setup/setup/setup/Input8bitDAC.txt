@@ -1,0 +1,9 @@
+#Resister definition Input8bitDAC
+StartDefinition
+BitNum  ArrayNum  BitOrder  A0   A1   A2   A3   A4   A5   A6   A7   A8   A9   A10  A11  A12  A13  A14  A15  A16  A17  A18  A19  A20  A21  A22  A23  A24  A25  A26  A27  A28  A29  A30  A31
+EndDefinition
+#BitNum is # of bit in one array
+#ArrayNum is # of ch ; ArrayNum is 10, Max is A9
+#BitOrder 0 = LSB to MSB; 1 = MSB to LSB; #From 0 - 35 ch; DAC0 - DAC7 & DAC On (9bit)
+#bit9 = 1 -> DAC on
+9        32        0        353  353  352  354  355  354  354  354  347  354  353  348  348  348  348  351  337  346  344  346  330  344  341  342  340  342  338  341  343  341  341  341  
