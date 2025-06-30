@@ -48,6 +48,8 @@
 #define READER_THREAD_H
 
 #include <iostream>
+#include <string>
+
 #include "kol/kolthread.h"
 #include "kol/koltcp.h"
 #include "RingBuffer/RingBuffer.h"
@@ -64,7 +66,7 @@ public:
 public:
   ReaderThread(int buflen, int quelen);
   virtual ~ReaderThread();
-  void setHost(const char * host, int port, int node);
+  void setHost(const std::string& host, int port, int node);
   virtual void initBuffer();
   RingBuffer * getNodeRB();
   virtual EventBuffer * peekReadFragData();
@@ -89,7 +91,7 @@ protected:
 			      int rest_byte);
 
 // private:
-  const char * m_host;
+  std::string m_host;
   int    m_port;
   int    m_node;
   int    m_ringbuf_len;

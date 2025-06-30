@@ -1,0 +1,9 @@
+#Resister definition LGPAFback
+StartDefinition
+BitNum  ArrayNum  BitOrder  A0   A1   A2   A3   A4   A5   A6   A7   A8   A9   A10  A11  A12  A13  A14  A15  A16  A17  A18  A19  A20  A21  A22  A23  A24  A25  A26  A27  A28  A29  A30  A31
+EndDefinition
+#BitNum is # of bit in one array
+#ArrayNum is # of ch ; ArrayNum is 10, Max is A9
+#BitOrder 0 = LSB to MSB; 1 = MSB to LSB;
+#No C = 0; 100 fF = 8; 200 fF = 4; 300 fF = 12; 400 fF = 2; 500 fF = 10; 600 fF = 6; 700 fF = 14; 800 fF = 1; 900 fF = 9; 1.0 pF = 5; 1.1 pF = 13; 1.2 pF = 3; 1.3 pF = 11; 1.4 pF = 7; 1.5 pF = 15;
+4       1         1         4    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1

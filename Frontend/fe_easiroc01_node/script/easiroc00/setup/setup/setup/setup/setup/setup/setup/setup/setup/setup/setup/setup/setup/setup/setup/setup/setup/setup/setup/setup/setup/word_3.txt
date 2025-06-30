@@ -1,0 +1,6 @@
+#Definition of word 3
+StartDefinition
+bit0	bit1	bit2	bit3	bit4	bit5	bit6	bit7
+EndDefinition
+#pwr_on	none	none	none	none	Scurve	rst_Scu	none
+1	0	0	0	0	0	0	0

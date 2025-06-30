@@ -43,6 +43,7 @@ class Controller(Frame):
     self.daq_stop_flag = 0
     self.daq_auto_restart_flag = 0
     self.daq_auto_disk_switch_flag = 0
+    self.last_ess_flag = 0
     self.master_controller_flag = 0
     self.is_switching = False
     '''time stamps'''
@@ -73,7 +74,7 @@ class Controller(Frame):
     menubar.add_cascade(label='Message',menu=menu3)
     menubar.add_cascade(label='DAQ mode',menu=menu4)
     menubar.add_cascade(label='Options',menu=menu5)
-    menubar.add_cascade(state=DISABLED,label=' ' * 68)
+    menubar.add_cascade(state=DISABLED,label=' ' * 62)
     menubar.add_cascade(label='Data Sync',menu=menu6)
     if len(secondary_path_list) == 0:
       menubar.entryconfig('Data Sync', state=DISABLED)
@@ -133,6 +134,8 @@ class Controller(Frame):
     self.auto_restart.set(0)
     self.auto_disk_switch = IntVar()
     self.auto_disk_switch.set(0)
+    self.auto_ess = IntVar()
+    self.auto_ess.set(0)
     menu5.add_checkbutton(label='Auto Trig. ON',
                           onvalue=1, offvalue=0, variable=self.auto_trig_on)
     menu5.add_checkbutton(label='Auto Restart',
@@ -143,6 +146,12 @@ class Controller(Frame):
                             variable=self.auto_disk_switch)
     else:
       menu5.add_checkbutton(label='Auto Disk Switch', state=DISABLED)
+    if self.status_essdischarge() == -1:
+      menu5.add_checkbutton(label='Auto ESS Trig', state=DISABLED)
+    else:
+      menu5.add_checkbutton(label='Auto ESS Trig',
+                            onvalue=1, offvalue=0, variable=self.auto_ess)
+
     '''dsync'''
     menu6.add_command(label='Control Window',
                       command=dsync.msg_win.deiconify)
@@ -310,6 +319,7 @@ class Controller(Frame):
     self.btrigoff.config(state=NORMAL)
     MTMController.trig_on()
     if mode=='auto': self.write_run_comment('G_ON* ')
+    elif mode =='ess': self.write_run_comment('G_ON! ')
     else           : self.write_run_comment('G_ON  ')
     self.set_trig_state('ON')
   #____________________________________________________________________________
@@ -318,8 +328,31 @@ class Controller(Frame):
     self.btrigoff.config(state=DISABLED)
     MTMController.trig_off()
     if mode=='auto': self.write_run_comment('G_OFF*')
+    elif mode =='ess': self.write_run_comment('G_OFF! ')
     else           : self.write_run_comment('G_OFF ')
     self.set_trig_state('OFF')
+  #____________________________________________________________________________
+  def status_essdischarge(self, not_found=-1):
+    path_ess = "/mnt/raid/subdata/monitor_tmp/ESSdischarge.txt"
+    try:
+      with open(path_ess,'r') as f:
+        state_ess = f.read().strip()
+        if state_ess == "1": # ESS discharge
+          return int(state_ess)
+        elif state_ess == "0": # ESS stable
+          return int(state_ess)
+        else:
+          print("no ESS status")
+          state_ess = 2 # no value
+          return int(state_ess)
+    except FileNotFoundError:
+      print("{path_ess} not found")
+      self.auto_ess.set(0)
+      return int(not_found)
+    except IOError as e:
+      print("ESS status check Error:{e}")
+      self.auto_ess.set(0)
+      return int(not_found)
   #____________________________________________________________________________
   def clean_list_command(self):
     status.cleanup_list()
@@ -552,6 +585,7 @@ class Controller(Frame):
       self.btrigoff.config(state=DISABLED)
       self.maxevent_e.config(state=NORMAL)
       self.daq_stop_flag = 0
+      self.last_ess_flag = 0
       if len(primary_path_list) > 1:
         self.menu1.entryconfig('Switch Disk',
                                command=self.switch_disk, state=NORMAL)
@@ -655,7 +689,7 @@ class Controller(Frame):
       current  = int(status.dist_evnum)
       if current >= maxevent and maxevent != -1:
         self.stop_command('auto')
-        if self.auto_restart.get()==1 :
+        if self.auto_restart.get()==1:
           self.daq_auto_restart_flag=1
     '''Auto restart'''
     if self.daq_state == StatusList.S_IDLE:
@@ -671,6 +705,27 @@ class Controller(Frame):
       dsync.AddSaveMessage(dsync_log, linebuf)
     else:
       dsync.AddMessage(linebuf)
+    '''Auto ESS discharge Trigger '''
+    if (self.daq_state == StatusList.S_RUNNING and
+        self.auto_ess.get() == 1):
+      if (self.status_essdischarge() == 1 and
+          self.get_trig_state() == 'ON' and
+          self.last_ess_flag == 0 ):
+        self.trigoff_command('ess')
+        self.last_ess_flag = 1
+        print(f"ESS discharge Trig OFF ")
+      if (self.status_essdischarge() in (0,2) and
+          self.get_trig_state() == 'OFF' and
+          self.last_ess_flag == 1 ):
+        self.trigon_command('ess')
+        self.last_ess_flag = 0
+        print(f"ESS discharge recover Trig ON ")
+      if (self.status_essdischarge() == -1 and
+          self.last_ess_flag == -1 ):
+        self.auto_ess.set(0)
+        self.last_ess_flag = 0
+        self.menu5.entryconfig('Auto ESS Trig', state=DISABLED)
+
     '''500ms repetition'''
     self.after(500, self.updater)
 
@@ -749,7 +804,8 @@ if __name__ == '__main__':
   #   sound_command = 'aplay ' + sound_file
   # else:
   #   sound_command = 'ssh eb0 aplay ' + sound_file
-  sound_command = 'sshpass -p beamtime ssh sks@k18epics aplay -Dhw:1,0 under_transition.wav'
+  # sound_command = 'sshpass -p beamtime ssh sks@k18epics aplay -Dhw:1,0 under_transition.wav'
+  sound_command = 'ssh sks@k18epics aplay under_transition.wav'
   '''
   mainloop
   '''
