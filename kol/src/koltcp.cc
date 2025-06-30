@@ -382,7 +382,7 @@ TcpClient::TcpClient() :
 }
 
 void
-TcpClient::Start(const char* host, int port)
+TcpClient::Start(const std::string& host, int port)
 {
   try
   {
@@ -397,7 +397,7 @@ TcpClient::Start(const char* host, int port)
     hints.ai_family = PF_INET;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = 0;
-    if((err = getaddrinfo(host, 0, &hints, &res)) != 0)
+    if((err = getaddrinfo(host.c_str(), 0, &hints, &res)) != 0)
       throw SocketException("TcpClient::getaddrinfo error: "+std::string(gai_strerror(err)));
 //       throw SocketException("TcpClient::getaddrinfo error");
     resaddr = (struct sockaddr_in*)res->ai_addr;
@@ -416,16 +416,16 @@ TcpClient::Start(const char* host, int port)
   }
 }
 
-TcpClient::TcpClient(const char* host, int port) :
+TcpClient::TcpClient(const std::string& host, int port) :
   TcpBuffer(PF_INET, SOCK_STREAM, 0)
 {
-  Start(host, port);
+  Start(host.c_str(), port);
 }
 
-TcpClient::TcpClient(const Socket& s, const char* host, int port) :
+TcpClient::TcpClient(const Socket& s, const std::string& host, int port) :
   TcpBuffer(s)
 {
-  Start(host, port);
+  Start(host.c_str(), port);
 }
 
 TcpClient::~TcpClient()

@@ -97,7 +97,7 @@ ReaderThread::~ReaderThread()
   delete m_node_rb;
 }
 
-void ReaderThread::setHost(const char *host, int port, int node)
+void ReaderThread::setHost(const std::string& host, int port, int node)
 {
   m_host = host;
   m_port = port;

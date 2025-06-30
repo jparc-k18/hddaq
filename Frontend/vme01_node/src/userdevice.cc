@@ -16,7 +16,7 @@
 #define DMA_V792  1 // if DMA_CHAIN 0
 
 #define USE_RM 0
-#define USE_RMME 1
+#define USE_RMME 0
 
 #define USE_V775 0
 
@@ -77,7 +77,7 @@ open_device( NodeProp& nodeprop )
 
   ////////// V792
   {
-    GEF_UINT16 geo_addr[]  = { 0x2, 0x4, 0x6, 0x8, 0xa, 0xc, 0xe };
+    GEF_UINT16 geo_addr[]  = { 0x2, 0x4, 0x6, 0x8, 0xa };
 #if USE_V775
     GEF_UINT16 chain_set[] = { 0x2, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3 };
 #else
@@ -277,7 +277,7 @@ wait_device( NodeProp& nodeprop )
       }
 #endif
 
-#if 0
+#if 1
 #if DMA_CHAIN
       static const int n = gVme.GetNumOfModule<vme::CaenV792>();
       int dready = 0;
@@ -398,12 +398,11 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	  int ncount   = (buf>> 8) & 0x3f;
 	  switch( geo_addr ){
 	  case 0x2: case 0x4: case 0x6: case 0x8: case 0xa:
-	  case 0xc: case 0xe:
 	    vme_addr = 0xAD000000 | (geo_addr<<15);
 	    break;
-	  // case 0xc: case 0xe: case 0x10:
-	  //   vme_addr = 0xBD000000 | ( (geo_addr-0x8)<<15 );
-	  //   break;
+	  case 0xc:
+	    vme_addr = 0xAD020000;
+	    break;
 	  default:
 	    {
 	      std::ostringstream oss;

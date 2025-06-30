@@ -3,6 +3,8 @@
 
 #include "kolsocket.h"
 
+#include <string>
+
 // 08-Jun-2007
 //  - getsockname() and getpeername() functions were added in TcpBuffer.
 // 16-Nov-2006
@@ -90,10 +92,10 @@ namespace kol
   {
   public:
     TcpClient();
-    TcpClient(const char* host, int port);
-    TcpClient(const Socket& s, const char* host, int port);
+    TcpClient(const std::string& host, int port);
+    TcpClient(const Socket& s, const std::string& host, int port);
     virtual ~TcpClient();
-    void Start(const char* host, int port);
+    void Start(const std::string& host, int port);
 
 //  private:
 //    void Start(const char* host, int port);
