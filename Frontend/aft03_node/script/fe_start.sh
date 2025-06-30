@@ -10,7 +10,7 @@ $bin_dir/message.sh > /dev/null 2> /dev/null &
 sleep 1
 
 reg_dir=${HOME}/vme-easiroc-registers
-#reg_dir=default
+# reg_dir=default
 adc=on
 adc_off=off
 tdc=on
@@ -19,7 +19,10 @@ tdc=on
 #for i in $(seq 96 102)
 #for i in $(seq 16 17) $(seq 19 31)
 #for i in $(seq 16 17) $(seq 31 34) $(seq 49 53) $(seq 69 74) $(seq 95 95)
-for i in $(seq 46 48) $(seq 64 68) $(seq 86 86) 
+#for i in $(seq 46 48) $(seq 64 68) $(seq 86 86)
+for i in $(seq 46 48) $(seq 64 68) $(seq 86 86)
+# for i in $(seq 46 48) $(seq 64 68)
+#### 101 to 103 for BGO parasite ####
 #for i in $(seq 16 16)
 do
   if [ $i -eq 18 ]; then continue; fi
@@ -32,7 +35,7 @@ do
   sitcp_ip=192.168.11.$i
   module_num=$i
 
-  if [ $i -ge 96 -a $i -le 102 ]; then
+  if [ $i -ge 96 -a $i -le 103 ]; then
     $bin_dir/frontend.sh \
 	$nickname \
 	$nodeid \
