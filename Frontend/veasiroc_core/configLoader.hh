@@ -6,6 +6,7 @@
 #include<map>
 #include<string>
 #include<algorithm>
+#include<cstdint>
 
 namespace veasiroc
 {
