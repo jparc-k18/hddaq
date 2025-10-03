@@ -6,7 +6,7 @@ cd $bin_dir
 
 $bin_dir/message.sh > /dev/null 2> /dev/null &
 
-/home/axis/CCUSB_AD413A_Init/Init_AD413A
+sudo /home/axis/CCUSB_AD413A_Init/Init_AD413A
 
 sleep 1
 

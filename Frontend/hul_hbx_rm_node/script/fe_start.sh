@@ -4,16 +4,16 @@ bin_dir=$(dirname `readlink -f $0`)
 
 cd $bin_dir
 
-$bin_dir/message.sh > /dev/null 2> /dev/null &
+ $bin_dir/message.sh > /dev/null 2> /dev/null &
 
 sleep 1
 
 #for i in $(seq 0 1)
-for i in $(seq 0 0)
+for i in $(seq 1 1)
 do 
-    nodeid=`expr 2000 - $i`
-    nickname=hul_hbx_scr`expr 1 - $i`
-    dataport=`expr 9000 - $i` 
+    nodeid=`expr 2000 + $i`
+    nickname=hul_hbx_scr`expr 3 - $i`
+    dataport=`expr 9000 + $i` 
     sitcp_ip=192.168.12.`expr 10 + $i`
     master=--master
     en_block=0x3

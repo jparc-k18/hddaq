@@ -19,8 +19,10 @@ nodeid=2005
 nickname=hul_hbx_mhtdc-2
 dataport=9005 
 sitcp_ip=192.168.12.15
-min_window=0
-max_window=130
+min_window=31
+#max_window=94
+max_window=188
+#max_window=282;
 only_leading=1
 master=--slave
 

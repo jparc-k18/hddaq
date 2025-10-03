@@ -14,6 +14,8 @@
 #include "network.hh"
 #include "rbcp.hh"
 
+//#define DEBUG 1
+
 namespace
 {
   using namespace HUL;

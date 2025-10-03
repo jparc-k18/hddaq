@@ -5,7 +5,7 @@
 #include"RegisterMapCommon.hh"
 
 namespace HUL{
-namespace UMEM{
+namespace Scaler{
 //-------------------------------------------------------------------------
 // TRM Module
 //-------------------------------------------------------------------------
@@ -44,35 +44,34 @@ namespace DCT{
 };
 
 //-------------------------------------------------------------------------
+// DCT Module
+//-------------------------------------------------------------------------
+namespace SCR{
+  enum LocalAddress
+    {
+     kAddrCounterReset = 0x20000000, // W,    Assert counter reset
+     kAddrEnableBlock  = 0x20100000, // W/R,  [3:0] Set block enable
+     kAddrEnableHdrst  = 0x20200000  // W/R,  [3:0] Enable hardware reset
+    };
+};
+
+//-------------------------------------------------------------------------
 // IOM Module
 //-------------------------------------------------------------------------
 namespace IOM{
   enum LocalAddress
     {
-//     kAddrNimout1     = 0x30000000, // W/R, [3:0]
-//     kAddrNimout2     = 0x30100000, // W/R, [3:0]
-//     kAddrNimout3     = 0x30200000, // W/R, [3:0]
-//     kAddrNimout4     = 0x30300000, // W/R, [3:0]
-//     kAddrExtL1       = 0x30400000, // W/R, [2:0]
-//     kAddrExtL2       = 0x30500000, // W/R, [2:0]
-//     kAddrExtClr      = 0x30600000, // W/R, [2:0]
-//     kAddrExtBusy     = 0x30700000, // W/R, [2:0]
-//     kAddrExtRsv2     = 0x30800000, // W/R, [2:0]
-//     kAddrExtUMEMAcc  = 0x30900000, // W/R, [2:0]
-//     kAddrExtUMEMPass = 0x30A00000, // W/R, [2:0]
-//     kAddrExtUMEMWst  = 0x30B00000, // W/R, [2:0]
-     kAddrNimout1     = 0x20000000, // W/R, [3:0]
-     kAddrNimout2     = 0x20100000, // W/R, [3:0]
-     kAddrNimout3     = 0x20200000, // W/R, [3:0]
-     kAddrNimout4     = 0x20300000, // W/R, [3:0]
-     kAddrExtL1       = 0x20400000, // W/R, [2:0]
-     kAddrExtL2       = 0x20500000, // W/R, [2:0]
-     kAddrExtClr      = 0x20600000, // W/R, [2:0]
-     kAddrExtBusy     = 0x20700000, // W/R, [2:0]
-     kAddrExtRsv2     = 0x20800000, // W/R, [2:0]
-     kAddrExtUMEMAcc  = 0x20900000, // W/R, [2:0]
-     kAddrExtUMEMPass = 0x20A00000, // W/R, [2:0]
-     kAddrExtUMEMWst  = 0x20B00000, // W/R, [2:0]
+     kAddrNimout1     = 0x30000000, // W/R, [3:0]
+     kAddrNimout2     = 0x30100000, // W/R, [3:0]
+     kAddrNimout3     = 0x30200000, // W/R, [3:0]
+     kAddrNimout4     = 0x30300000, // W/R, [3:0]
+     kAddrExtL1       = 0x30400000, // W/R, [2:0]
+     kAddrExtL2       = 0x30500000, // W/R, [2:0]
+     kAddrExtClr      = 0x30600000, // W/R, [2:0]
+     kAddrExtSpillGate= 0x30700000, // W/R, [2:0]
+     kAddrExtCCRst    = 0x30800000, // W/R, [2:0]
+     kAddrExtBusy     = 0x30900000, // W/R, [2:0]
+     kAddrExtRsv2     = 0x30A00000  // W/R, [2:0]
     };
 
   enum OutputSubbAddress
@@ -89,10 +88,7 @@ namespace IOM{
      kReg_o_clk1MHz    = 0x9,
      kReg_o_clk100kHz  = 0xA,
      kReg_o_clk10kHz   = 0xB,
-     //kReg_o_clk1kHz    = 0xC
-     kReg_o_UMEMRen    = 0xC,
-     kReg_o_UMEMClr   = 0xD,
-     kReg_o_UMEMWak    = 0xE
+     kReg_o_clk1kHz    = 0xC
     };
 
   enum InputSubbAddress

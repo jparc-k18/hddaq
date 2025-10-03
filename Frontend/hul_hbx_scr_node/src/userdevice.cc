@@ -235,9 +235,12 @@ init_device( NodeProp& nodeprop )
 
       
       if(flag_master){
+	// fModule.WriteModule(TRM::kAddrSelectTrigger,
+	// 		    TRM::kRegL1RM | TRM::kRegL2RM | TRM::kRegClrRM |
+	// 		    TRM::kRegEnL2 | TRM::kRegEnRM, 2 );
 	fModule.WriteModule(TRM::kAddrSelectTrigger,
-			    TRM::kRegL1RM | TRM::kRegL2RM | TRM::kRegClrRM |
-			    TRM::kRegEnL2 | TRM::kRegEnRM, 2 );
+			    TRM::kRegL1Ext | TRM::kRegEnRM, 2 );
+
       }else{
 	fModule.WriteModule(TRM::kAddrSelectTrigger,
 			    TRM::kRegL1J0 | TRM::kRegL2J0 | TRM::kRegClrJ0 |
@@ -249,16 +252,19 @@ init_device( NodeProp& nodeprop )
       fModule.WriteModule(SCR::kAddrCounterReset, 0x0, 1);
       fModule.WriteModule(SCR::kAddrEnableBlock, reg_en_block, 1);
       fModule.WriteModule(SCR::kAddrEnableHdrst, 0xf, 1);
-      
+
+      //      fModule.WriteModule(IOM::kAddrExtL1     , IOM::kReg_i_Nimin1, 1); //default
       fModule.WriteModule(IOM::kAddrExtSpillGate, IOM::kReg_i_Nimin1, 1);
       fModule.WriteModule(IOM::kAddrExtCCRst    , IOM::kReg_i_Nimin2, 1);
-      //fModule.WriteModule(IOM::kAddrExtBusy     , IOM::kReg_i_Nimin3, 1);
-      //fModule.WriteModule(IOM::kAddrExtRsv2     , IOM::kReg_i_Nimin4, 1);
-      //fModule.WriteModule(IOM::kAddrExtL1     , IOM::kReg_i_Nimin4, 1);
-      //fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_ModuleBusy, 1);
-      fModule.WriteModule(IOM::kAddrNimout2     , IOM::kReg_o_RML1, 1);
-      //fModule.WriteModule(IOM::kAddrNimout3     , IOM::kReg_o_clk1kHz, 1);
-      //fModule.WriteModule(IOM::kAddrNimout4     , IOM::kReg_o_RML2, 1);
+      fModule.WriteModule(IOM::kAddrExtL1       , IOM::kReg_i_Nimin3, 1);
+      // fModule.WriteModule(IOM::kAddrExtBusy     , IOM::kReg_i_Nimin4, 1);
+      //fModule.WriteModule(IOM::kAddrExtBusy     , IOM::kReg_i_Nimin3, 1); //default
+      fModule.WriteModule(IOM::kAddrExtRsv2     , IOM::kReg_i_Nimin4, 1); //default
+
+      fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_ModuleBusy, 1); //default
+      fModule.WriteModule(IOM::kAddrNimout2     , IOM::kReg_o_RML1, 1); 
+      fModule.WriteModule(IOM::kAddrNimout3     , IOM::kReg_o_clk1kHz, 1); //default
+      //fModule.WriteModule(IOM::kAddrNimout4     , IOM::kReg_o_RML2, 1); 
 
       // start DAQ
       fModule.WriteModule(DCT::kAddrDaqGate, 1, 1);
