@@ -278,13 +278,14 @@ int main(int argc, char* argv[])
 	else if (flag=="slow")
 	  readers[node] = new SlowReaderThread(node_buflen, quelen);
 
-	const char *hostname = node_info[node].getHostName().c_str();
+	//	const char *hostname = node_info[node].getHostName().c_str();
+	const std::string hostname = node_info[node].getHostName();
 	int port       = node_info[node].getPortNo();
 	std::stringstream name;
 	name << "** ReaderThread" << std::setw(3) << node;
 	readers[node]->setName(name.str());
 	readers[node]->setHost(hostname, port, node);
-
+	std::cout<<hostname;
 	// std::cerr << "  hostname:" << node_info[node].getHostName();
 	// std::cerr << "  RingBuf Size:" << node_buflen
 	// 	  << "  RingBuf len:" << quelen << " "
@@ -295,6 +296,7 @@ int main(int argc, char* argv[])
 	    << "  Bsize =" << std::setw(6) << node_buflen
 	    << "  Nque =" << std::setw(6) << quelen;
 	std::cout << msg.str() << std::endl;
+	//	std::cout << node_info[node].getHostName() << std::endl;
 	msock.sendString(msg.str());
       }
 
