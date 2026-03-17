@@ -242,9 +242,12 @@ init_device( NodeProp& nodeprop )
 			    TRM::kRegL1Ext | TRM::kRegEnRM, 2 );
 
       }else{
-	fModule.WriteModule(TRM::kAddrSelectTrigger,
-			    TRM::kRegL1J0 | TRM::kRegL2J0 | TRM::kRegClrJ0 |
-			    TRM::kRegEnL2 | TRM::kRegEnJ0, 2);
+	// fModule.WriteModule(TRM::kAddrSelectTrigger,
+	// 		    TRM::kRegL1J0 | TRM::kRegL2J0 | TRM::kRegClrJ0 |
+	// 		    TRM::kRegEnL2 | TRM::kRegEnJ0, 2);
+        fModule.WriteModule(TRM::kAddrSelectTrigger,
+                            TRM::kRegL1Ext | TRM::kRegL2J0 | TRM::kRegClrJ0 |
+                            TRM::kRegEnL2  | TRM::kRegEnJ0 ,2);
       }
 
       fModule.WriteModule(DCT::kAddrResetEvb, 0x1, 1);
