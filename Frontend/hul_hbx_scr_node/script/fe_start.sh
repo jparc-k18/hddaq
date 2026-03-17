@@ -15,7 +15,7 @@ do
     nickname=hul_hbx_scr`expr 1 - $i`
     dataport=`expr 9000 - $i` 
     sitcp_ip=192.168.12.`expr 10 + $i`
-    master=--master
+    master=--slave
     en_block=0x3
 
     $bin_dir/frontend.sh \
