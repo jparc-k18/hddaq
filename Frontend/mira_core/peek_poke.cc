@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cerrno>
 #include <unistd.h>
+#include <iomanip> 
 #include <sys/types.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -20,6 +21,7 @@ static inline uint32_t loadLittleEndian32(const std::vector<uint8_t> b)
     | ((uint32_t)b[2] << 16)
     | ((uint32_t)b[3] << 24);
 }
+
 
 bool send_all(int sock, const void* data, size_t len, std::string& err)
 {
@@ -46,7 +48,7 @@ bool send_all(int sock, const void* data, size_t len, std::string& err)
     err = std::string("send failed: ") + std::strerror(errno);
     return false;
   }
-
+  //  std::cout<<"send_all : "<<data<<std::endl;
   return true;
   
 }
@@ -84,7 +86,7 @@ std::vector<uint8_t> sendcom(const char* ip, const uint16_t& port,const uint32_t
 {
   struct sockaddr_in SiTCP_ADDR;
 
-  int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  int sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
   SiTCP_ADDR.sin_family = AF_INET;
   SiTCP_ADDR.sin_port   = htons(port); // little -> big
   SiTCP_ADDR.sin_addr.s_addr   = inet_addr(ip);// string ->uint32 and little -> big
@@ -103,6 +105,17 @@ std::vector<uint8_t> sendcom(const char* ip, const uint16_t& port,const uint32_t
   }
 
   std::string err;
+
+  // sockaddr_in sa{};
+  // socklen_t sl = sizeof(sa);
+  // getsockname(sock, (sockaddr*)&sa, &sl);
+  // if (getsockname(sock, (struct sockaddr*)&sa, &sl) == 0) {
+  //   std::cout << "cmd local port = "
+  //             << std::dec << ntohs(sa.sin_port)
+  //             << std::endl;
+  // } else {
+  //   perror("getsockname");
+  // }
   
   uint32_t comlen = 4 + payload.size(); // 4 means comm bytes
   if(!send_all(sock, &comlen,4,err)){
@@ -111,12 +124,19 @@ std::vector<uint8_t> sendcom(const char* ip, const uint16_t& port,const uint32_t
 
   std::vector<uint8_t> sendbuf;
   sendbuf.resize(comlen);
-
+  //  uint32_t com_big = htonl(com);
+  
   if(payload.size()>0){
     std::memcpy(sendbuf.data(), &com, 4);
     std::memcpy(sendbuf.data()+4,payload.data(),payload.size());    
   }else{
     std::memcpy(sendbuf.data(), &com, 4);
+    std::cout<<"sendbuf : 0x";
+    for(auto byte : sendbuf){
+      std::cout<< std::hex << std::setw(2) << std::setfill('0')<< static_cast<int>(byte) << " ";
+    }
+    std::cout<<std::endl;
+
   }
 
   if(!send_all(sock,sendbuf.data(),sendbuf.size(),err)){
@@ -130,6 +150,7 @@ std::vector<uint8_t> sendcom(const char* ip, const uint16_t& port,const uint32_t
   }
   uint32_t retlen = loadLittleEndian32(lenbuf);
 
+
   // if(retlen < 4){
   //   //    std::cout<<"lenbuf = "<<lenbuf<<std::endl;
   //   throw std::runtime_error("protocol error: retlen<4 (" + std::to_string(retlen)+")");
@@ -141,6 +162,8 @@ std::vector<uint8_t> sendcom(const char* ip, const uint16_t& port,const uint32_t
   //   throw std::runtime_error("recv body failed: " + err);
   // }
 
+  //  ::usleep(500000);
+  shutdown(sock,SHUT_RDWR);
   close(sock);
   
   return recvbuf;

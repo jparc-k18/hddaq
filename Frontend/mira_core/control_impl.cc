@@ -23,7 +23,7 @@ void pokewrap(const char* ip, const uint32_t& addr, const uint32_t& data)
 {
   char buf[64];
   int len = std::snprintf(buf,sizeof(buf),"poke 0x%x 0x%x",addr,(uint32_t)data);
-  std::cout<<buf<<std::endl;
+  //  std::cout<<buf<<std::endl;
   std::string payload(buf,len);
   try{
     auto recv = sendcom(ip, BABIMOPORT, MON_PEXEC, payload);
@@ -64,11 +64,11 @@ void fpwrite(const char* ip, const uint32_t& mod, const uint32_t& ch, const std:
   if(pname == "mode"){
     char buf[64];
     snprintf(buf,sizeof(buf),"setting readout mode for mod[%d] ch[%d] to val[%d]",mod,ch,val);
-    std::cout<<buf<<std::endl;
+    //    std::cout<<buf<<std::endl;
     addr=addr_mode;
     uint32_t ret = peekwrap(ip,addr);
     snprintf(buf,sizeof(buf),"previous value [0d%d] [0x%x]",ret,ret);
-    std::cout<<buf<<std::endl;
+    //    std::cout<<buf<<std::endl;
     uint32_t mask = 0xffffffff - (0x7 << 3*ch); //specific  3bit are removed
     data = (ret & mask) | (val << 3*ch);
     try {
@@ -105,7 +105,7 @@ void fpwrite(const char* ip, const uint32_t& mod, const uint32_t& ch, const std:
     uint32_t ret = peekwrap(ip,addr);
     char buf[64];
     snprintf(buf,sizeof(buf),"previous value [%s] [0d%d] [0x%x]",pname.c_str(),ret,ret);
-    std::cout<<buf<<std::endl;
+    //    std::cout<<buf<<std::endl;
   }catch(const std::exception& e){
     std::cerr<<"fpwrite error: "<<e.what() <<std::endl;
     throw;
@@ -114,7 +114,7 @@ void fpwrite(const char* ip, const uint32_t& mod, const uint32_t& ch, const std:
     pokewrap(ip,addr,data);
     char buf[64];
     snprintf(buf,sizeof(buf),"value is changed [%s] [0d%d] [0x%x]",pname.c_str(),data,data);
-    std::cout<<buf<<std::endl;
+    //    std::cout<<buf<<std::endl;
   }catch(const std::exception& e){
     std::cerr<<"fpwrite error: "<<e.what() <<std::endl;
     throw;
@@ -198,7 +198,7 @@ void pgaconfig(const char* ip, const uint32_t& comgainstr)
   }
   char buf[64];
   snprintf(buf,sizeof(buf),"configuring PGAs gain = %d",comgainstr);
-  std::cout<<buf<<std::endl;
+  //std::cout<<buf<<std::endl;
 
 }
 

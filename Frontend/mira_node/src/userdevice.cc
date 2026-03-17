@@ -2,7 +2,9 @@
 #include "userdevice.h"
 
 #include "kol/koltcp.h"
-
+#include<atomic>
+#include<condition_variable>
+#include<mutex>
 #include<iostream>
 #include<fstream>
 #include<sstream>
@@ -36,13 +38,18 @@ namespace
 {
 
   //maximum datasize by byte unit
-  static const int n_header      = 3;
+  static const int n_header      = 7;
   static const int max_n_word    = n_header+2*16*64 + 64*2;
   static const int max_data_size = sizeof(unsigned int)*max_n_word;
 
   std::string module_num;
-  int  sock_com=0;
-  int  sock_data=0;
+  int sock_com  = 0;
+  int sock_data = 0;
+  bool accept_ready = false;
+  bool accepted = false;
+  std::mutex mtx;
+  std::condition_variable cv;
+  
   char selfip[80] = "192.168.1.3";
   //_________________________________________________________________________
   // local function
@@ -77,81 +84,101 @@ namespace
   int
   BindSocket(const uint16_t& port_sel)
   {
-    struct sockaddr_in SiTCP_ADDR;
-    unsigned int port = port_sel;
+    struct sockaddr_in SiTCP_ADDR{};
+    SiTCP_ADDR.sin_family      = AF_INET;
+    SiTCP_ADDR.sin_port        = htons(port_sel);
+    SiTCP_ADDR.sin_addr.s_addr = htonl(INADDR_ANY);
 
     // std::cout<<"ip = "<<std::string(ip)<<std::endl;
     // std::cout<<"port = "<<port<<std::endl;
 	
-    int sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-
+    int sock = ::socket(AF_INET, SOCK_STREAM, 0);
+    if(sock<0){
+      perror("socket");
+      return -1;
+    }
     int yes = 1;
-    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
-    SiTCP_ADDR.sin_family      = AF_INET;
-    SiTCP_ADDR.sin_port        = htons((unsigned short int)port);
-    SiTCP_ADDR.sin_addr.s_addr = INADDR_ANY;
-
-    // making ip:port socket
-    bind(sock, (struct sockaddr*)&SiTCP_ADDR, sizeof(SiTCP_ADDR));
-    
+    if(::setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes))<0){
+      perror("setsockopt(SO_REUSEADDR)");
+      ::close(sock);
+      return -1;
+    }
+    if(::bind(sock, (struct sockaddr*)&SiTCP_ADDR, sizeof(SiTCP_ADDR))<0){
+      perror("bind");
+      ::close(sock);
+      return -1;
+    }
     return sock;
   }
 
   //_________________________________________________________________________
   void accept_loop(int sock){
+
+    {
+      std::lock_guard<std::mutex> lk(mtx);
+      accept_ready = true;
+    }
+    cv.notify_one();
     struct sockaddr_in CLIENT_ADDR;
     socklen_t len = sizeof(CLIENT_ADDR);
     sock_data = accept(sock,(struct sockaddr*)&CLIENT_ADDR,&len);
-    std::cout<<"sock_data : "<<sock_data<<std::endl;
+    // std::cout<<"!!!!!!!!!!!!!!!!!!!!!!!!"<<std::endl;
+    // std::cout<<"!        accept        !"<<std::endl;
+    // std::cout<<"!!!!!!!!!!!!!!!!!!!!!!!!"<<std::endl;
+    accepted = true;
     return;
   }
   
   //_________________________________________________________________________
-  void
-  readAndThrowPreviousData(double timeout = 0.1)
-  {
-    int thrownBytes = 0;
-    while(1) {
-      fd_set rfds;
-      FD_ZERO(&rfds);
-      std::cout<<"sock_data = "<<sock_data<<std::endl;
-      FD_SET(sock_data, &rfds);
-
-      struct timeval tv;
-      tv.tv_sec = static_cast<unsigned int>(timeout);
-      tv.tv_usec = static_cast<unsigned int>(timeout * 1000 * 1000);
-
-      int select_ret = select(sock_data + 1, &rfds, NULL, NULL, &tv);
-      if(select_ret < 0) {
-	perror("readAndThrowPreviousData");
-	throw std::runtime_error("select failed");
-	return;
-      }else if(select_ret == 0) {
-	break;
-      }else{
-	char buf[256];
-	thrownBytes += recv(sock_data, buf, sizeof(buf), 0);
-      }
-    }
-    std::cout << thrownBytes << " bytes are thrown" << std::endl;
-  }
 
   int
   receiveNByte(uint8_t* buf, size_t bytes)
   {
     ssize_t receivedBytes = 0;
     while(receivedBytes < bytes) {
+      //      std::cout<<"receive NBytes start"<<std::endl;
       ssize_t receivedDataLength = recv(sock_data, buf + receivedBytes,
 					bytes - receivedBytes, 0);
+
       if(receivedDataLength < 0) {
-	//	std::cout<<"recievedDataLength<0 "<<std::endl;
+	std::cout<<"recievedDataLength<0 "<<std::endl;
 	perror("recv");
 	throw std::runtime_error("recv failed");
       }
       receivedBytes += receivedDataLength;
-      //      std::cout << "receiveNbyte_: " << receivedDataLength << " bytes are read" << std::endl;
+      //      std::cout << "receiveNbyte_: " << std::dec<<receivedDataLength << " bytes are read" << std::endl;
     }
     return receivedBytes;
+  }
+  //_________________________________________________________________________
+  uint32_t
+  readAndThrowEfn()
+  {
+    //    std::cout<<"recieve efn start "<<std::endl;
+    uint8_t headerBuf[4];
+    if(receiveNByte(headerBuf, 4) < 0) {     
+      std::cout << "Receive efn failed" << std::endl;
+      throw std::runtime_error("Receive efn failed");
+    }
+    //    std::cout<<"recieve efn start clear "<<std::endl;
+    uint32_t header = Endian::getLittleEndian32(headerBuf);
+    bool isHeader = false;
+    //    std::cout<<"header : 0x"<<std::hex<<header<<std::endl;
+    if(header == 7) isHeader = true; //efn=7
+    if(isHeader){
+      std::string err;
+      std::vector<uint8_t> sendbuf;
+      sendbuf.resize(4);
+      uint32_t v = 1;
+      memcpy(sendbuf.data(), &v, 4);
+      if(!send_all(sock_data,sendbuf.data(),sendbuf.size(),err)){
+	throw std::runtime_error(" send body failed: " + err);
+      }
+    }else{
+      printf("    %08X\n", header);
+      throw std::runtime_error("Frame Error : invalid efn");
+    }
+    return header;
   }
 
   //_________________________________________________________________________
@@ -159,69 +186,47 @@ namespace
   receiveHeader()
   {
     //    std::cout<<"recieve header start "<<std::endl;
-    uint8_t headerBuf[4];
-    if(receiveNByte(headerBuf, 4) < 0) {     
-      std::cout << "Receive header failed" << std::endl;
-      throw std::runtime_error("Receive header failed");
+    uint8_t headerbuf[4];
+    if(receiveNByte(headerbuf, 4) < 0) {     
+      throw std::runtime_error("Receive header length failed");
     }
     //    std::cout<<"recieve header start clear "<<std::endl;
-    uint32_t header = Endian::getBigEndian32(headerBuf);
-    uint32_t cid = (header >> 22) & 0x3f;    
+    uint32_t header = Endian::getLittleEndian32(headerbuf);
+    uint32_t cid = (header >> 22) & 0x3f;
     bool isHeader = false;
+    //    std::cout<<"header : 0x"<<std::hex<<header<<std::endl;
     if(cid == 6) isHeader = true;
     if(!isHeader) {
-      std::cout << "Frame Error or event start" << std::endl;
       printf("    %08X\n", header);
+      uint8_t nullheaderbuf[8];
+      if(receiveNByte(nullheaderbuf, 8) < 0) {     
+	throw std::runtime_error("Receive null header failed");
+      }
       throw std::runtime_error("Frame Error or event start");
     }
     return header;
   }
 
-  uint32_t
+  std::vector<uint8_t>
   receiveSecondHeader()
   {
-    uint8_t headerBuf[4];
-    if(receiveNByte(headerBuf, 4) < 0) {
+    std::vector<uint8_t> headerBuf;
+    static const unsigned int buflen = 7*4;
+    headerBuf.resize(buflen);
+    if(receiveNByte(headerBuf.data(), buflen) < 0) {
       std::cout << "Receive second header failed" << std::endl;
       throw std::runtime_error("Receive second header failed");
     }
-    uint32_t header = Endian::getBigEndian32(headerBuf);
-    uint32_t cid = (header >> 22) & 0x3f;
-    bool isHeader = false;
-    if(cid == 4) isHeader = true;
-    if(!isHeader) {
-      std::cout << "Frame Error " << std::endl;
-      printf("    %08X\n", header);
-      throw std::runtime_error("Frame Error or event start");
-    }
-    return header;
+    return headerBuf; 
   }
-
-  
-  void
-  receivenullHeader(size_t length)
-  {
-
-    for(int i = 0; i<length; i++){
-      uint8_t headerBuf[4];
-      if(receiveNByte(headerBuf, 16) < 0) {
-	std::cout << "Receive null header failed" << std::endl;
-	throw std::runtime_error("Receive null header failed");
-      }
-    }
-    return;
-  }
-
   
   //_________________________________________________________________________
   size_t
   receiveData(uint8_t* buf, size_t length)
   {
-    return receiveNByte(buf, length * 4);
+    return receiveNByte(buf, length);
   }
-  
 }
-
 //___________________________________________________________________________
 int
 get_maxdatasize( void )
@@ -258,7 +263,7 @@ open_device( NodeProp& nodeprop )
   while(true){
     try{
       std::cout<<"init start"<<std::endl;
-      fpwrite(ip,0,0,"rdena",0x33ff);
+      fpwrite(ip,0,0,"rdena",0x0001);
       for(int i = 0; i<12; i++){
 	fpwrite(ip,0,i,"dellen",0xff06);
 	csrwrite(ip,0,i,"inv",0);
@@ -282,6 +287,9 @@ open_device( NodeProp& nodeprop )
     }
   }
 
+  //  getchar();
+
+  
   //Connection check -----------------------------------------------
   while(0 > (sock_com = ConnectSocket(ip,ESCOMPORT) )){
     std::ostringstream oss;
@@ -304,14 +312,14 @@ init_device( NodeProp& nodeprop )
   // update DAQ mode
   //g_daq_mode = DM_NORMAL;
   g_daq_mode = nodeprop.getDaqMode();
-
+  
   //  event_num = 0;
 
  
   switch(g_daq_mode){
   case DM_NORMAL:
     {
-      fpwrite(ip,0,0,"rdena",0x33ff);
+      fpwrite(ip,0,0,"rdena",0x0001);
       for(int i = 0; i<12; i++){
 	fpwrite(ip,0,i,"dellen",0xff06);
 	csrwrite(ip,0,i,"inv",0x0);
@@ -327,10 +335,9 @@ init_device( NodeProp& nodeprop )
       }
       fpwrite(ip,0,0,"monitor",0x1);
       pgaconfig(ip,10);
-
       int sock_conn = 0;
       ////////////////making server socket and witing connection
-
+    
       if(0 > (sock_conn = BindSocket(ERRCVPORT))){
 	std::cout<<"bind fail"<<std::endl;
 	perror("bind");
@@ -338,7 +345,7 @@ init_device( NodeProp& nodeprop )
 	return;
       }
 
-      if(0 > listen(sock_conn, 1)){
+      if(0 > listen(sock_conn, 16)){
 	std::cout<<"listen fail"<<std::endl;
 	perror("listen");
 	close(sock_conn);
@@ -346,85 +353,90 @@ init_device( NodeProp& nodeprop )
       }
       std::cout<<"sock_conn : "<<sock_conn<<std::endl;      
 
+      {
+	std::lock_guard<std::mutex> lk(mtx);
+	accept_ready = false;
+      }
+      
       std::thread th(accept_loop, sock_conn);
 
-      /////////////////////////////////////
-      sleep(0.5);
-
+      {
+	std::unique_lock<std::mutex> lk(mtx);
+	cv.wait(lk, []{return accept_ready;});
+      }      
+      
       try{
 	std::vector<uint8_t> buf = sendcom(ip,ESCOMPORT,ES_GET_CONFIG,"");
-	std::cout<<"get config"<<std::endl;
+	//	std::cout<<"get config"<<std::endl;
 	Resp428 resp = unpack_resp(buf,buf.size());
 
-	std::cout<<"erhost before = "<<resp.erhost.data()<<std::endl;
-	std::cout<<"erport before= "<<resp.erport<<std::endl;
+	// std::cout<<"erhost before = "<<resp.erhost.data()<<std::endl;
+	// std::cout<<"erport before= "<<resp.erport<<std::endl;
 	std::memcpy(resp.erhost.data(),selfip,sizeof(selfip));
 	std::string payload = pack_resp(resp);
 
 	sendcom(ip,ESCOMPORT,ES_SET_CONFIG,payload);
-
+	::usleep(500000);
 	std::vector<uint8_t> getbuf = sendcom(ip,ESCOMPORT,ES_GET_CONFIG,"");
-	std::cout<<"-----------------"<<std::endl;
-	std::cout<<"get config second"<<std::endl;
-	std::cout<<"-----------------"<<std::endl;
+	// std::cout<<"-----------------"<<std::endl;
+	// std::cout<<"get config second"<<std::endl;
+	// std::cout<<"-----------------"<<std::endl;
 		
 	Resp428 respsecond = unpack_resp(getbuf,getbuf.size());
-	std::cout<<"finish unpack"<<std::endl;
-	std::cout<<"efid  : "<<respsecond.efid<<std::endl;
-	std::cout<<"runnumber : "<<respsecond.runnumber<<std::endl;
-	std::cout<<"erport : "<<respsecond.erport<<std::endl;
-	std::cout<<"comport : "<<respsecond.comport<<std::endl;
-	std::cout<<"erhost : "<<respsecond.erhost.data()<<std::endl;
-	std::cout<<"mtdir : "<<respsecond.mtdir.data()<<std::endl;
-	std::cout<<"connect : "<<respsecond.connect<<std::endl;
+ 	// std::cout<<"finish unpack"<<std::endl;
+	// std::cout<<"efid  : "<<respsecond.efid<<std::endl;
+	// std::cout<<"runnumber : "<<respsecond.runnumber<<std::endl;
+	// std::cout<<"erport : "<<std::dec<<respsecond.erport<<std::endl;
+	// std::cout<<"comport : "<<std::dec<<respsecond.comport<<std::endl;
+	// std::cout<<"erhost : "<<respsecond.erhost.data()<<std::endl;
+	// std::cout<<"mtdir : "<<respsecond.mtdir.data()<<std::endl;
+	// std::cout<<"connect : "<<respsecond.connect<<std::endl;
 		
 	std::vector<uint8_t> evtnbuf = sendcom(ip,ESCOMPORT,ES_GET_EVTN,"");
-	std::cout<<"evtn  = ";
-	for(auto i : evtnbuf){
-	  std::cout<<i<<",";
-	}
-	std::cout<<std::endl;
-
+	// std::cout<<"evtn  = ";
+	// for(auto i : evtnbuf){
+	//   std::cout<<std::hex<<static_cast<int>(i)<<".";
+	// }
+	// std::cout<<std::endl;
 	std::vector<uint8_t> runstatbuf = sendcom(ip,ESCOMPORT,ES_GET_RUNSTAT,"");
-	std::cout<<"runstat  = ";
-	for(auto i : runstatbuf){
-	  std::cout<<i<<",";
-	}
-	std::cout<<std::endl;
-
-	
-	std::vector<uint8_t> nsstabuf = sendcom(ip,ESCOMPORT,ES_RUN_NSSTA,""); // after this command, client attempt to connect server
-	//std::vector<uint8_t> nsstabuf = sendcom(ip,ESCOMPORT,4,""); 
-	std::cout<<"nssta  = ";
-	for(auto i : nsstabuf){
-	  std::cout<<i<<",";
-	}
-	std::cout<<std::endl;
-
-	std::cout<<"daq com is finished"<<std::endl;
+	// std::cout<<"runstat  = ";
+	// for(auto i : runstatbuf){
+	//   std::cout<<std::hex<<static_cast<int>(i)<<".";
+	// }
+	// std::cout<<std::endl;
+	::usleep(500000);
+	//	while (!accepted){
+	std::vector<uint8_t> nsstabuf = sendcom(ip,ESCOMPORT,ES_RUN_NSSTA,""); // after this command, client will attempt to connect server
+	// std::cout<<"nssta  = ";
+	// for(auto i : nsstabuf){
+	//   std::cout<<std::hex<<static_cast<int>(i)<<".";
+	// }
+	// std::cout<<std::endl;
+	//   ::usleep(1000000);
+	// }
+	fpwrite(ip,0,0,"trigsrc",0x00000010); // trig selctor   
+	//	std::cout<<"daq com is finished"<<std::endl;
       }catch(std::exception &e){
 	send_error_message(e.what());
 	std::cout<<"DAQ COMAND error : "<<e.what()<<std::endl;
 	return;
       }
-      ::sleep(0.5);
+      //      ::usleep(500000);
+      ::usleep(500000);
       th.join();
-
-      fpwrite(ip,0,0,"trigsrc",0x00000010); // trig selctor 
-      
       {
 	std::ostringstream oss;
 	oss << func_name << "All Connection done : " << ip;
 	send_normal_message( oss.str() );
 	std::cout<<oss.str()<<std::endl;
       }
-      readAndThrowPreviousData();
+      readAndThrowEfn();
       
       return;
     }
   case DM_DUMMY:
     {
-      fpwrite(ip,0,0,"rdena",0x33ff);
+      fpwrite(ip,0,0,"rdena",0x0001);
       for(int i = 0; i<12; i++){
 	fpwrite(ip,0,i,"dellen",0xff06);
 	csrwrite(ip,0,i,"inv",0);
@@ -490,8 +502,10 @@ wait_device( NodeProp& nodeprop )
   return  0: TRIGGED -> go read_device
 */
 {
-  // const std::string& nick_name(nodeprop.getNickName());
-  // const std::string& func_name(nick_name+" [::"+__func__+"()]");
+  const std::string& nick_name(nodeprop.getNickName());
+  const std::string& func_name(nick_name+" [::"+__func__+"()]");
+
+  std::cout<<func_name<<std::endl;
   switch(g_daq_mode){
   case DM_NORMAL:
     {
@@ -516,41 +530,35 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
   return  0: Send data to EV
 */
 {
-  // const std::string& nick_name(nodeprop.getNickName());
-  // const std::string& func_name(nick_name+" [::"+__func__+"()]");
+  const std::string& nick_name(nodeprop.getNickName());
+  const std::string& func_name(nick_name+" [::"+__func__+"()]");
   switch(g_daq_mode){
   case DM_NORMAL:
     {
       try {
-	//	std::cout<<"recv start"<<std::endl;
+	std::cout<<func_name<<" : recv start"<<std::endl;
         uint32_t header = receiveHeader();
-        uint8_t spillNumber = 0x0000; // now null
-        uint8_t eventNumber = 0x0000; // now null
+	uint32_t dataSize = (header & 0x3fffff)*2 - 4*8;
+	std::cout<<"First Header clear"<<std::endl;
 
+	std::vector<uint8_t> secondheader = receiveSecondHeader();
+        uint8_t spillNumber = 0x0000; // now null	
+	uint8_t eventNumber = secondheader[7];
+	uint32_t ch = secondheader[23] & 0x3f; // det selct
 	std::cout<<"First Header clear"<<std::endl;
 	
-        Endian::setLittleEndian32(data, 0x4157494d);
+        Endian::setLittleEndian32(data, 0x4152494d);
         data++;
         Endian::setLittleEndian32(data, spillNumber << 3 | eventNumber);
         data++;
-
-	receivenullHeader(4);
-	std::cout<<"null Header clear"<<std::endl;
-	
-	receiveSecondHeader();
-	uint32_t second_header = receiveSecondHeader();
-	uint32_t ch = (header >> 8) & 0x3f;
-	uint32_t dataSize = header & 0x0fff - 4*2;
-        Endian::setLittleEndian32(data, dataSize);
+	Endian::setLittleEndian32(data, dataSize);
         data++;
-	std::cout<<"Second Header clear"<<std::endl;
-	
-	receivenullHeader(2);
-	std::cout<<"null Header clear"<<std::endl;
+	Endian::setLittleEndian32(data, ch);
+        data++;
 	
         size_t receivedDataLength = receiveData(reinterpret_cast<uint8_t*>(data),
                                                  static_cast<size_t>(dataSize));
-        if(receivedDataLength != dataSize * 4) {
+        if(receivedDataLength != dataSize) {
 	  std::cerr << "receiveData failed" << std::endl;
 	  return -1;
         }
@@ -570,6 +578,6 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
   default:
     len = 0;
     return 0;
+  
   }
-
 }
