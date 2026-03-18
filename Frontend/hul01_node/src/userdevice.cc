@@ -275,17 +275,17 @@ init_device( NodeProp& nodeprop )
       // start DAQ
       fModule.WriteModule(DCT::kAddrDaqGate, 1, 1);
 
-      // added for HBX daq
-      {
-	bool flag =true;
-	std::time_t start_t = std::time(nullptr);
-	while(flag){
-	  std::time_t now_t = std::time(nullptr);
-	  if(now_t-start_t >= 5){
-	    flag = false;
-	  }
-	}
-      }
+      // // added for HBX daq
+      // {
+      // 	bool flag =true;
+      // 	std::time_t start_t = std::time(nullptr);
+      // 	while(flag){
+      // 	  std::time_t now_t = std::time(nullptr);
+      // 	  if(now_t-start_t >= 5){
+      // 	    flag = false;
+      // 	  }
+      // 	}
+      // }
 
       return;
     }
